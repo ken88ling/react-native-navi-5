@@ -1,19 +1,21 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 
-import { SignIn } from "./App/SignInScreen";
-import { CreateAccount } from "./App/CreateAccountScreen";
-import { Home } from "./App/HomeScreen";
-import { Profile } from "./App/ProfileScreen";
-import { Search } from "./App/SearchScreen";
-import { Details } from "./App/DetailsScreen";
-import { Search2 } from "./App/Search2Screen";
-import { Splash } from "./App/Splash";
+import { AuthContext } from "./contexts/authContext";
+
+import { SignIn } from "./screens/SignInScreen";
+import { CreateAccount } from "./screens/CreateAccountScreen";
+import { Home } from "./screens/HomeScreen";
+import { Profile } from "./screens/ProfileScreen";
+import { Search } from "./screens/SearchScreen";
+import { Details } from "./screens/DetailsScreen";
+import { Search2 } from "./screens/Search2Screen";
+import { Splash } from "./screens/Splash";
 
 const AuthSack = createStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -57,7 +59,24 @@ const TabsScreen = () => (
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [useToken, setUseToken] = useState(""); // simulate token
+  const [userToken, setUserToken] = useState(null); // simulate token
+
+  const authContext = React.useMemo(() => {
+    return {
+      signIn: () => {
+        setIsLoading(false);
+        setUserToken("asdf");
+      },
+      signUp: () => {
+        setIsLoading(false);
+        setUserToken("asdf");
+      },
+      signOut: () => {
+        setIsLoading(false);
+        setUserToken(null);
+      },
+    };
+  }, []);
 
   useEffect(() => {
     setTimeout(() => {
@@ -70,27 +89,29 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      {useToken ? (
-        <Drawer.Navigator>
-          <Drawer.Screen name="Home" component={TabsScreen} />
-          <Drawer.Screen name="Profile" component={ProfileStackScreen} />
-        </Drawer.Navigator>
-      ) : (
-        <AuthSack.Navigator>
-          <AuthSack.Screen
-            name="SignIn"
-            component={SignIn}
-            options={{ title: "Sign in" }}
-          />
-          <AuthSack.Screen
-            name="CreateAccount"
-            component={CreateAccount}
-            options={{ title: "Create Account" }}
-          />
-        </AuthSack.Navigator>
-      )}
-    </NavigationContainer>
+    <AuthContext.Provider value={authContext}>
+      <NavigationContainer>
+        {userToken ? (
+          <Drawer.Navigator initialRouteName="Profile">
+            <Drawer.Screen name="Home" component={TabsScreen} />
+            <Drawer.Screen name="Profile" component={ProfileStackScreen} />
+          </Drawer.Navigator>
+        ) : (
+          <AuthSack.Navigator>
+            <AuthSack.Screen
+              name="SignIn"
+              component={SignIn}
+              options={{ title: "Sign in" }}
+            />
+            <AuthSack.Screen
+              name="CreateAccount"
+              component={CreateAccount}
+              options={{ title: "Create Account" }}
+            />
+          </AuthSack.Navigator>
+        )}
+      </NavigationContainer>
+    </AuthContext.Provider>
   );
 }
 
